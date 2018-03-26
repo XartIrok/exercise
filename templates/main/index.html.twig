@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                ID
+            </div>
+            <div class="col">
+                Work Days
+            </div>
+            <div class="col">
+                Holidays
+            </div>
+            <div class="col">
+                Saturdays
+            </div>
+            <div class="col">
+                Sundays
+            </div>
+            <div class="col">
+                Sum
+            </div>
+        </div>
+        {% for entry in info %}
+            <div class="row">
+                <div class="col">
+                    {{ entry.id }}
+                </div>
+                <div class="col">
+                    {{ entry.days.workdays }}
+                </div>
+                <div class="col">
+                    {{ entry.days.holidays }}
+                </div>
+                <div class="col">
+                    {{ entry.days.saturdays }}
+                </div>
+                <div class="col">
+                    {{ entry.days.sundays }}
+                </div>
+                <div class="col"></div>
+            </div>
+            <div class="row">
+                <div class="col"></div>
+                <div class="col">
+                    {% set w = entry.days.workdays * 1.00 * entry.weight %}
+                    {{ w }}
+                </div>
+                <div class="col">
+                    {% set h = entry.days.holidays * 0.16 * entry.weight %}
+                    {{ h }}
+                </div>
+                <div class="col">
+                    {% set sa = entry.days.saturdays * 1.23 * entry.weight %}
+                    {{ sa }}
+                </div>
+                <div class="col">
+                    {% set su = entry.days.sundays * 0.97 * entry.weight %}
+                    {{ su }}
+                </div>
+                <div class="col">
+                    {{ w + h + sa + su }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
