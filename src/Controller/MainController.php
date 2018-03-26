@@ -104,8 +104,7 @@ class MainController extends Controller
 
     private function getNumberDaysInMonth($from, $to)
     {
-        $workingDays = [1, 2, 3, 4, 5]; # date format = N (1 = Monday, ...)
-        $holidayDays = ['*-01-01', '*-01-06','*-05-01','*-05-03','*-08-15','*-11-01','*-11-11','*-12-25','*-12-26']; # variable and fixed holidays
+        $holidayDays = ['*-01-01', '*-01-06','*-05-01','*-05-03','*-08-15','*-11-01','*-11-11','*-12-25','*-12-26'];
 
         $from = new \DateTime($from);
         $to = new \DateTime($to);
