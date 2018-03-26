@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
 class MainController extends Controller
@@ -13,17 +15,51 @@ class MainController extends Controller
     /**
      * @Route("/")
      */
-    public function number()
+    public function index(Request $request)
     {
+        if ($request->isMethod('POST')) {
+            $file = $request->files->get('upload');
+            $file->move($this->get('kernel')->getProjectDir().'/assets/', 'input.csv');
+        }
+
         $this->getInput();
 
-        foreach ($this->data as $key => $ele) {
+        foreach($this->data as $key => $ele) {
             $info[$key]['id']       = $ele['id'];
             $info[$key]['weight']   = str_replace(',', '.', $ele['weight']);
             $info[$key]['days']     = $this->getInformation($ele);
         }
 
         return $this->render('main/index.html.twig', array('info' => $info));
+    }
+
+    /**
+     * @Route("/export")
+     */
+    public function generateCsv()
+    {
+        $this->getInput();
+        $data = $this->data;
+        $response = new StreamedResponse();
+        $response->setCallback(function() use ($data) {
+            $handle = fopen('php://output', 'w+');
+            foreach($data as $key => $ele) {
+                $info = $this->getInformation($ele);
+                $weight = str_replace(',', '.', $ele['weight']);
+                $sum = round(($info['workdays'] * 1.00 * $weight) + ($info['holidays'] * 0.16 * $weight) + ($info['saturdays'] * 1.23 * $weight) + ($info['sundays'] * 0.97 * $weight), 2);
+                $move = str_replace('.', ',', $sum);
+                $val = array($ele['id'], $move);
+                fputcsv($handle, $val, ';');
+            }
+
+            fclose($handle);
+        });
+
+        $response->setStatusCode(200);
+        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+        $response->headers->set('Content-Disposition', 'attachment; filename="export-'.date('Y-m-d').'.csv"');
+
+        return $response->send();
     }
 
     private function getInput()
@@ -94,20 +130,20 @@ class MainController extends Controller
 
         $days = 0; $holidays = 0; $saturdays = 0; $sundays = 0;
         foreach ($periods as $period) {
-            if ($period->format('N') == 6) {
-                $saturdays++;
-                continue;
-            }
-            if ($period->format('N') == 7) {
-                $sundays++;
-                continue;
-            }
             if (in_array($period->format('Y-m-d'), $holidayDays)) {
                 $holidays++;
                 continue;
             }
             if (in_array($period->format('*-m-d'), $holidayDays)) {
                 $holidays++;
+                continue;
+            }
+            if ($period->format('N') == 6) {
+                $saturdays++;
+                continue;
+            }
+            if ($period->format('N') == 7) {
+                $sundays++;
                 continue;
             }
             $days++;
